@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-import type { LeaderboardEntry, LeaderboardMap, QuizDifficulty } from '../stores/quizStore'
+import type { LeaderboardEntry, LeaderboardMap } from '../stores/quizStore'
+import type { QuizDifficulty } from './quizUtils'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -17,12 +18,6 @@ export const hasRemoteLeaderboard = Boolean(supabaseClient)
 
 const difficulties: QuizDifficulty[] = ['easy', 'medium', 'hard']
 
-type LeaderboardRow = {
-  name: string
-  score: number
-  achieved_at: string
-}
-
 function createEmptyLeaderboard(): LeaderboardMap {
   return {
     easy: [],
@@ -34,7 +29,7 @@ function createEmptyLeaderboard(): LeaderboardMap {
 export async function fetchRemoteLeaderboards(): Promise<LeaderboardMap | null> {
   if (!supabaseClient) return null
 
-  const map = createEmptyLeaderboard()
+  const map: LeaderboardMap = createEmptyLeaderboard()
 
   for (const difficulty of difficulties) {
     const { data, error } = await supabaseClient
