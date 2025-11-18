@@ -86,6 +86,8 @@ const emit = defineEmits<{
 }
 
 .quiz-settings__start {
+  display: block;
+  margin: 0 auto;
   padding: 0.6rem 1.25rem;
   border-radius: 0.5rem;
   border: none;
