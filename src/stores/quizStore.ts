@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { decodeHtmlEntities, shuffleArray, type QuizDifficulty } from '../helpers/quizUtils'
 import { useUserStore } from './userStore'
+import {
+  fetchRemoteLeaderboards,
+  hasRemoteLeaderboard,
+  submitRemoteLeaderboardEntry,
+} from '../helpers/leaderboardService'
 
 export interface TriviaApiQuestion {
   question: string
@@ -169,6 +174,36 @@ export const useQuizStore = defineStore('quiz', {
     },
   },
   actions: {
+    async syncRemoteLeaderboards() {
+      if (!hasRemoteLeaderboard) return
+      try {
+        const remote = await fetchRemoteLeaderboards()
+        if (remote) {
+          this.leaderboards = remote
+          persistLeaderboards(this.leaderboards)
+        }
+      } catch (error) {
+        console.warn('Failed to sync remote leaderboards', error)
+      }
+    },
+    applyLocalLeaderboardEntry(entry: LeaderboardEntry, difficulty: QuizDifficulty) {
+      const bucket = this.leaderboards[difficulty]
+      this.leaderboards[difficulty] = [entry, ...bucket]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+      persistLeaderboards(this.leaderboards)
+    },
+    async pushEntryToRemote(entry: LeaderboardEntry, difficulty: QuizDifficulty) {
+      if (!hasRemoteLeaderboard) return
+      try {
+        const success = await submitRemoteLeaderboardEntry(entry, difficulty)
+        if (success) {
+          await this.syncRemoteLeaderboards()
+        }
+      } catch (error) {
+        console.warn('Failed to persist remote leaderboard entry', error)
+      }
+    },
     setCategory(categoryId: string) {
       this.selectedCategory = categoryId
       persistPreferences(this.selectedCategory, this.selectedDifficulty)
@@ -264,11 +299,8 @@ export const useQuizStore = defineStore('quiz', {
         achievedAt: new Date().toISOString(),
       }
 
-      const bucket = this.leaderboards[this.selectedDifficulty]
-      this.leaderboards[this.selectedDifficulty] = [entry, ...bucket]
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10)
-      persistLeaderboards(this.leaderboards)
+      this.applyLocalLeaderboardEntry(entry, this.selectedDifficulty)
+      void this.pushEntryToRemote(entry, this.selectedDifficulty)
     },
     resetQuizProgress() {
       this.clearAutoAdvance()

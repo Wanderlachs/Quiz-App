@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useQuizStore } from '../stores/quizStore'
 import { useUserStore } from '../stores/userStore'
 import LeaderboardList from './LeaderboardList.vue'
@@ -8,6 +9,10 @@ import RoundSummaryPanel from './RoundSummaryPanel.vue'
 
 const quizStore = useQuizStore()
 const userStore = useUserStore()
+
+onMounted(() => {
+  quizStore.syncRemoteLeaderboards()
+})
 
 function startQuizRound() {
   userStore.resetScore()
