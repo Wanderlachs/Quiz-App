@@ -208,6 +208,7 @@ function changeName() {
 
 .quiz-board__score-row .score-pill {
   width: 100%;
+  justify-content: space-between;
 }
 
 .quiz-board__round-actions {
@@ -327,10 +328,6 @@ function changeName() {
   .quiz-board__round-actions > * {
     width: 100%;
     text-align: center;
-  }
-
-  .score-pill {
-    justify-content: center;
   }
 
   .quiz-board__joker-row {
